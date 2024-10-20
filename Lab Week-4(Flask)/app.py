@@ -1,5 +1,4 @@
 import matplotlib
-matplotlib.use('Agg')  # Non GUI backend for Macos
 
 from flask import Flask, render_template, request, send_from_directory
 import pandas as pd
@@ -14,7 +13,7 @@ def home():
     if request.method == 'GET':
         return render_template('index.html')
     elif request.method == 'POST':
-        df = pd.read_csv('./Data.csv')
+        df = pd.read_csv('./data.csv')
         id_type = request.form.get('ID')
         id_value = request.form.get('id_value')
 
@@ -63,4 +62,4 @@ def export_plot(data):
     plt.close()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, port=5000) 
