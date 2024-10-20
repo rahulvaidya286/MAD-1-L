@@ -28,7 +28,7 @@ To use the solutions in this repository:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/mad1-lab-solutions.git
+   git clone https://github.com/BriskAM/MAD-1-L.git
    ```
 2. Navigate to the assignment directory you are interested in:
    ```bash
