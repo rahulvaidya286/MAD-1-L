@@ -1,5 +1,4 @@
 import matplotlib
-
 from flask import Flask, render_template, request, send_from_directory
 import pandas as pd
 import matplotlib.pyplot as plt

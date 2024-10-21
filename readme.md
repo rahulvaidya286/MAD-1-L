@@ -12,7 +12,7 @@ This repository contains solutions to the lab assignments for the subject **MAD-
 
 ## Introduction
 
-The MAD-1 course focuses on [briefly describe the course content]. This repository serves as a resource for students to understand and learn from the solutions provided for each lab assignment.
+The MAD-1 course focuses on app development techniques. This repository serves as a resource for students to understand and learn from the solutions provided for each lab assignment.
 
 ## Assignments
 
