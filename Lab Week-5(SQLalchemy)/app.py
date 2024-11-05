@@ -35,5 +35,68 @@ def home():
     else:
         return render_template('index_alt.html')
 
+@app.route('/student/create', methods=['GET', 'POST'])
+def create_student():
+    if request.method == 'GET':
+        return render_template('create.html')
+    elif request.method == 'POST':
+        roll_number = request.form['roll']
+        first_name = request.form['f_name']
+        last_name = request.form['l_name']
+        courses = request.form.getlist('courses')
+        existing_student = Student.query.filter_by(roll_number=roll_number).first()
+        if existing_student:
+            return render_template('exists.html', roll_number=roll_number)
+        else:
+            new_student = Student(roll_number=roll_number, first_name=first_name, last_name=last_name)
+            db.session.add(new_student)
+            db.session.commit()
+            for course_code in courses:
+                course = Course.query.filter_by(course_code=course_code).first()
+                if course:
+                    enrollment = Enrollment(estudent_id=new_student.student_id, ecourse_id=course.course_id)
+                    db.session.add(enrollment)
+            db.session.commit()
+            return redirect(url_for('home'))
+    else:
+        return render_template('error.html')
+    
+@app.route('/student/<int:student_id>/update', methods=['GET', 'POST'])
+def update_student(student_id):
+    if request.method == 'GET':
+        student = Student.query.filter_by(student_id=student_id).first()
+        return render_template('update.html', student=student)
+    elif request.method == 'POST':
+        student = Student.query.filter_by(student_id=student_id).first()
+        if student:
+            student.first_name = request.form['f_name']
+            student.last_name = request.form['l_name']
+            courses = request.form.getlist('courses')
+            
+            # Clear existing enrollments
+            Enrollment.query.filter_by(estudent_id=student_id).delete()
+            
+            # Add new enrollments
+            for course_code in courses:
+                course = Course.query.filter_by(course_code=course_code).first()
+                if course:
+                    enrollment = Enrollment(estudent_id=student.student_id, ecourse_id=course.course_id)
+                    db.session.add(enrollment)
+            
+            db.session.commit()
+            return redirect(url_for('home'))
+        else:
+            return render_template('error.html')
+
+@app.route('/student/<int:student_id>/delete', methods=['GET'])
+def delete_student(student_id):
+    student = Student.query.filter_by(student_id=student_id).first()
+    if student:
+        db.session.delete(student)
+        db.session.commit()
+        return redirect(url_for('home'))
+    else:
+        return render_template('error.html')
+    
 if __name__ == '__main__':
     app.run(debug=True)
