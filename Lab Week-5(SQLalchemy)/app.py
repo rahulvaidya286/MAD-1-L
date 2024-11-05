@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./database.sqlite3'
 app.config['SECRET_KEY'] = 'your_secret_key'
 db = SQLAlchemy(app)
 
@@ -26,10 +26,13 @@ class Enrollment(db.Model):
     estudent_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
     ecourse_id = db.Column(db.Integer, db.ForeignKey('course.course_id'), nullable=False)
 
+with app.app_context():
+    db.create_all()
+
 # Routes
 @app.route('/', methods=['GET'])
 def home():
-    students = Student.query.all()
+    students = Student.query.order_by(Student.roll_number).all()
     if students:
         return render_template('index.html', students=students)
     else:
@@ -51,10 +54,11 @@ def create_student():
             new_student = Student(roll_number=roll_number, first_name=first_name, last_name=last_name)
             db.session.add(new_student)
             db.session.commit()
+            added_student = Student.query.filter_by(roll_number=roll_number).first()
             for course_code in courses:
                 course = Course.query.filter_by(course_code=course_code).first()
                 if course:
-                    enrollment = Enrollment(estudent_id=new_student.student_id, ecourse_id=course.course_id)
+                    enrollment = Enrollment(estudent_id=added_student.student_id, ecourse_id=course.course_id)
                     db.session.add(enrollment)
             db.session.commit()
             return redirect(url_for('home'))
@@ -91,12 +95,22 @@ def update_student(student_id):
 @app.route('/student/<int:student_id>/delete', methods=['GET'])
 def delete_student(student_id):
     student = Student.query.filter_by(student_id=student_id).first()
-    if student:
-        db.session.delete(student)
-        db.session.commit()
-        return redirect(url_for('home'))
-    else:
-        return render_template('error.html')
+    db.session.delete(student)
+    db.session.commit()
+    Enrollment.query.filter_by(estudent_id=student_id).delete()
+    db.session.commit()
+    return redirect(url_for('home'))
+    
+@app.route('/student/<int:student_id>', methods=['GET'])
+def view_student(student_id):
+    student = Student.query.filter_by(student_id=student_id).first()
+    enrollments = Enrollment.query.filter_by(estudent_id=student_id).all()
+    enrolled_courses = []
+    for enrollment in enrollments:
+        course = Course.query.filter_by(course_id=enrollment.ecourse_id).first()
+        enrolled_courses.append(course)
+    return render_template('view_student.html', student=student, enrolled_courses=enrolled_courses)
     
 if __name__ == '__main__':
+    #Run the app
     app.run(debug=True)

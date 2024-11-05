@@ -1,0 +1,9 @@
+# Ignore MacOS system files
+.DS_Store
+
+# Ignore generated files
+bar-chart.png
+
+# Ignore SQLite database file
+database.sqlite3
+
