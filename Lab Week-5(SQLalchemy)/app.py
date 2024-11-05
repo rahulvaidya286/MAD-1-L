@@ -26,6 +26,7 @@ class Enrollment(db.Model):
     estudent_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
     ecourse_id = db.Column(db.Integer, db.ForeignKey('course.course_id'), nullable=False)
 
+# Create the database and the tables
 with app.app_context():
     db.create_all()
 
@@ -55,7 +56,7 @@ def create_student():
             db.session.add(new_student)
             db.session.commit()
             added_student = Student.query.filter_by(roll_number=roll_number).first()
-            for course_code in courses:
+            for course_code in courses: # Add new enrollments
                 course = Course.query.filter_by(course_code=course_code).first()
                 if course:
                     enrollment = Enrollment(estudent_id=added_student.student_id, ecourse_id=course.course_id)
@@ -76,12 +77,8 @@ def update_student(student_id):
             student.first_name = request.form['f_name']
             student.last_name = request.form['l_name']
             courses = request.form.getlist('courses')
-            
-            # Clear existing enrollments
-            Enrollment.query.filter_by(estudent_id=student_id).delete()
-            
-            # Add new enrollments
-            for course_code in courses:
+            Enrollment.query.filter_by(estudent_id=student_id).delete() # Clear existing enrollments
+            for course_code in courses: # Add new enrollments
                 course = Course.query.filter_by(course_code=course_code).first()
                 if course:
                     enrollment = Enrollment(estudent_id=student.student_id, ecourse_id=course.course_id)
