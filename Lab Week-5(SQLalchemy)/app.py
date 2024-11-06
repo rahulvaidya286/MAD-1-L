@@ -26,10 +26,6 @@ class Enrollment(db.Model):
     estudent_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
     ecourse_id = db.Column(db.Integer, db.ForeignKey('course.course_id'), nullable=False)
 
-# Create the database and the tables
-with app.app_context():
-    db.create_all()
-
 # Routes
 @app.route('/', methods=['GET'])
 def home():
