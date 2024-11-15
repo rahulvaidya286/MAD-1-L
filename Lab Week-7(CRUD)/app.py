@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -12,8 +12,6 @@ class Student(db.Model):
     roll_number = db.Column(db.String, unique=True, nullable=False)
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String)
-    enrollments = db.relationship('Enrollments', backref='student', lazy=True, 
-                                cascade="all, delete-orphan")
 
 class Course(db.Model):
     __tablename__ = 'course'
@@ -21,8 +19,6 @@ class Course(db.Model):
     course_code = db.Column(db.String, unique=True, nullable=False)
     course_name = db.Column(db.String, nullable=False)
     course_description = db.Column(db.String)
-    enrollments = db.relationship('Enrollments', backref='course', lazy=True, 
-                                cascade="all, delete-orphan")
 
 class Enrollments(db.Model):
     __tablename__ = 'enrollments'
@@ -34,7 +30,7 @@ class Enrollments(db.Model):
 @app.route('/')
 def index():
     students = Student.query.order_by(Student.roll_number).all()
-    return render_template('index.html', students=students)
+    return render_template('index.html', students=students), 200
 
 @app.route('/student/create', methods=['GET', 'POST'])
 def create_student():
@@ -46,19 +42,22 @@ def create_student():
         # Check if student already exists
         existing_student = Student.query.filter_by(roll_number=roll).first()
         if existing_student:
-            return render_template('student_exists.html', roll_number=roll)
+            return render_template('student_exists.html', roll_number=roll), 200
         
         new_student = Student(roll_number=roll, first_name=f_name, last_name=l_name)
         db.session.add(new_student)
         db.session.commit()
         return redirect(url_for('index'))
     
-    return render_template('create_student.html')
+    return render_template('create_student.html'), 200
 
 @app.route('/student/<int:student_id>/update', methods=['GET', 'POST'])
 def update_student(student_id):
     student = Student.query.get_or_404(student_id)
-    courses = Course.query.all()
+    # Get all courses except those the student is already enrolled in
+    enrolled_course_ids = db.session.query(Enrollments.ecourse_id).filter_by(estudent_id=student_id).all()
+    enrolled_course_ids = [id[0] for id in enrolled_course_ids]
+    courses = Course.query.filter(~Course.course_id.in_(enrolled_course_ids)).all()
     
     if request.method == 'POST':
         student.first_name = request.form['f_name']
@@ -67,17 +66,25 @@ def update_student(student_id):
         # Handle new enrollment
         course_id = request.form['course']
         if course_id:
-            new_enrollment = Enrollments(estudent_id=student_id, ecourse_id=course_id)
-            db.session.add(new_enrollment)
+            # Check if enrollment already exists
+            existing_enrollment = Enrollments.query.filter_by(
+                estudent_id=student_id,
+                ecourse_id=course_id
+            ).first()
+            
+            if not existing_enrollment:
+                new_enrollment = Enrollments(estudent_id=student_id, ecourse_id=course_id)
+                db.session.add(new_enrollment)
         
         db.session.commit()
         return redirect(url_for('index'))
     
-    return render_template('update_student.html', student=student, courses=courses)
+    return render_template('update_student.html', student=student, courses=courses), 200
 
 @app.route('/student/<int:student_id>/delete')
 def delete_student(student_id):
     student = Student.query.get_or_404(student_id)
+    Enrollments.query.filter_by(estudent_id=student_id).delete()
     db.session.delete(student)
     db.session.commit()
     return redirect(url_for('index'))
@@ -85,21 +92,34 @@ def delete_student(student_id):
 @app.route('/student/<int:student_id>')
 def student_detail(student_id):
     student = Student.query.get_or_404(student_id)
-    return render_template('student_detail.html', student=student)
+    enrollments = db.session.query(
+        Enrollments, Course
+    ).join(
+        Course, Enrollments.ecourse_id == Course.course_id
+    ).filter(
+        Enrollments.estudent_id == student_id
+    ).all()
+    return render_template('student_detail.html', student=student, enrollments=enrollments), 200
 
 @app.route('/student/<int:student_id>/withdraw/<int:course_id>')
 def withdraw_course(student_id, course_id):
-    enrollment = Enrollments.query.filter_by(estudent_id=student_id, ecourse_id=course_id).first()
-    if enrollment:
-        db.session.delete(enrollment)
-        db.session.commit()
-    return redirect(url_for('index'))
+    student = Student.query.get_or_404(student_id)
+    course = Course.query.get_or_404(course_id)
+    
+    enrollment = Enrollments.query.filter_by(
+        estudent_id=student_id,
+        ecourse_id=course_id
+    ).first_or_404()
+    
+    db.session.delete(enrollment)
+    db.session.commit()
+    return redirect(url_for('student_detail', student_id=student_id))
 
 # Routes for Course CRUD Operations
 @app.route('/courses')
 def courses():
     all_courses = Course.query.all()
-    return render_template('courses.html', courses=all_courses)
+    return render_template('courses.html', courses=all_courses), 200
 
 @app.route('/course/create', methods=['GET', 'POST'])
 def create_course():
@@ -108,17 +128,16 @@ def create_course():
         c_name = request.form['c_name']
         desc = request.form['desc']
         
-        # Check if course already exists
         existing_course = Course.query.filter_by(course_code=code).first()
         if existing_course:
-            return render_template('course_exists.html', course_code=code)
+            return render_template('course_exists.html', course_code=code), 200
         
         new_course = Course(course_code=code, course_name=c_name, course_description=desc)
         db.session.add(new_course)
         db.session.commit()
         return redirect(url_for('courses'))
     
-    return render_template('create_course.html')
+    return render_template('create_course.html'), 200
 
 @app.route('/course/<int:course_id>/update', methods=['GET', 'POST'])
 def update_course(course_id):
@@ -130,11 +149,12 @@ def update_course(course_id):
         db.session.commit()
         return redirect(url_for('courses'))
     
-    return render_template('update_course.html', course=course)
+    return render_template('update_course.html', course=course), 200
 
 @app.route('/course/<int:course_id>/delete')
 def delete_course(course_id):
     course = Course.query.get_or_404(course_id)
+    Enrollments.query.filter_by(ecourse_id=course_id).delete()
     db.session.delete(course)
     db.session.commit()
     return redirect(url_for('courses'))
@@ -142,7 +162,14 @@ def delete_course(course_id):
 @app.route('/course/<int:course_id>')
 def course_detail(course_id):
     course = Course.query.get_or_404(course_id)
-    return render_template('course_detail.html', course=course)
+    enrollments = db.session.query(
+        Enrollments, Student
+    ).join(
+        Student, Enrollments.estudent_id == Student.student_id
+    ).filter(
+        Enrollments.ecourse_id == course_id
+    ).all()
+    return render_template('course_detail.html', course=course, enrollments=enrollments), 200
 
 if __name__ == '__main__':
     # Run the app

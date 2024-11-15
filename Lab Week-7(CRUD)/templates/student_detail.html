@@ -24,7 +24,7 @@
         </tbody>
     </table>
 
-    {% if student.enrollments %}
+    {% if enrollments %}
     <h1 style="text-align: center;">Enrolled Courses</h1>
     <table id="student-enrollments">
         <thead>
@@ -37,14 +37,14 @@
             </tr>
         </thead>
         <tbody>
-            {% for enrollment in student.enrollments %}
+            {% for enrollment, course in enrollments %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ enrollment.course.course_code }}</td>
-                <td>{{ enrollment.course.course_name }}</td>
-                <td>{{ enrollment.course.course_description }}</td>
+                <td>{{ course.course_code }}</td>
+                <td>{{ course.course_name }}</td>
+                <td>{{ course.course_description }}</td>
                 <td>
-                    <a href="{{ url_for('withdraw_course', student_id=student.student_id, course_id=enrollment.course.course_id) }}">Withdraw</a>
+                    <a href="{{ url_for('withdraw_course', student_id=student.student_id, course_id=course.course_id) }}">Withdraw</a>
                 </td>
             </tr>
             {% endfor %}
