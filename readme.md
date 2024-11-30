@@ -1,44 +1,61 @@
 # MAD-1 Lab Assignment Solutions
 
-This repository contains solutions to the lab assignments for the subject **MAD-1** as part of the IITM BS Degree program. The solutions are organized by assignment and include code, explanations, and any necessary resources.
+This repository contains solutions to the Modern Application Development - 1 (MAD-1) lab assignments for the IITM BS Degree program. Each assignment demonstrates different aspects of web development using Python, Flask, and related technologies.
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Assignments](#assignments)
-- [Usage](#usage)
+- [Quick Start](#quick-start)
+- [Assignment Structure](#assignment-structure)
+- [Technologies Used](#technologies-used)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Introduction
-
-The MAD-1 course focuses on app development techniques. This repository serves as a resource for students to understand and learn from the solutions provided for each lab assignment.
-
-## Assignments
-
-Each assignment is located in its own directory and includes:
-
-- The problem statement
-- The solution code
-- Any additional resources or data files
-
-## Usage
-
-To use the solutions in this repository:
+## Quick Start
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/BriskAM/MAD-1-L.git
    ```
-2. Navigate to the assignment directory you are interested in:
+2. Navigate to the desired assignment directory:
    ```bash
-   cd mad1-lab-solutions/assignment-name
+   cd MAD-1-L/Lab-Week-<number>
    ```
-3. Follow the instructions in the README file within each assignment directory to run the code.
+3. Install dependencies (if required):
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Assignment Structure
+
+Each assignment is organized in its own directory with the following structure:
+```
+Lab-Week-<number>/
+├── templates/         # HTML templates
+├── static/           # Static files (CSS, images)
+├── app.py           # Main application file
+├── create_db.py     # Database initialization script
+└── README.md        # Assignment-specific instructions
+```
+
+## Technologies Used
+
+- Python 3.x
+- Flask
+- SQLAlchemy
+- HTML5 & CSS3
+- SQLite
+- Matplotlib & Pandas
 
 ## Contributing
 
-Contributions are welcome! If you have improvements or additional solutions, please fork the repository and submit a pull request. Ensure that your contributions adhere to the existing style and structure of the repository.
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+Please ensure your code follows the existing style and includes appropriate documentation.
 
 ## License
 
